@@ -278,14 +278,17 @@ contains
 
     include 'AMReX_bc_types.fi'
 
-    double precision :: x(3),vint(3)
-    double precision :: u_int(NVAR),u_ext(NVAR)
-    double precision :: time
-    logical rho_only
-    integer :: dir,sgn,bc
-    type (eos_t) :: eos_state
-    type (eos_t) :: eos_state_sup,eos_state_sub
+    double precision, intent(in) :: x(3)
+    double precision, intent(in) :: u_int(NVAR)
+    double precision, intent(inout) :: u_ext(NVAR)
+    integer, intent(in) :: dir,sgn,bc
+    type (eos_t), intent(inout) :: eos_state
+    logical, intent(in) :: rho_only
+    double precision, intent(in) :: time
 
+    ! locals
+    type (eos_t) :: eos_state_sup, eos_state_sub
+    double precision :: vint(3), xbc
     double precision :: u, v, w, machnum
 
     call build(eos_state_sup)
@@ -299,6 +302,7 @@ contains
     u = v0
     v = 0.d0
     w = 0.d0
+    xbc = problo(1) - x(1) ! the distance to physical boundary
 
     eos_state_sup % rho = u_int(URHO)
     eos_state_sup % T = u_int(UTEMP)
@@ -317,7 +321,7 @@ contains
           u_ext(URHO)  = rho0
        else
           u_ext(URHO)  = rho0
-          u_ext(UMX)   = rho0 * u * (1 + a_u * sin(omega_u * M_PI * x(2) / L) * sin(omega_t * M_PI * time / tau))
+          u_ext(UMX)   = rho0 * u * (1 + a_u * sin(omega_u * M_PI * x(2) / L) * sin(omega_t * M_PI * (time + xbc / u) / tau))
           u_ext(UMY)   = rho0 * v
           u_ext(UMZ)   = rho0 * w
           u_ext(UEINT) = rho0 * eint0
@@ -346,7 +350,7 @@ contains
              u_ext(UMY)   = u_ext(URHO) * vint(2)
              u_ext(UMZ)   = u_ext(URHO) * vint(3)
              u_ext(UEINT) = u_ext(URHO) * eos_state_sub % e
-             u_ext(UEDEN) = u_ext(UEINT) + 0.5d0 * u_ext(URHO) * (vint(1)**2 + vint(2)**2 + vint(3)**2)
+             u_ext(UEDEN) = u_ext(UEINT) + HALF * u_ext(URHO) * (vint(1)**2 + vint(2)**2 + vint(3)**2)
              u_ext(UTEMP) = eos_state_sub % T
              u_ext(UFS:UFS+nspec-1) = eos_state_sub % massfrac(:) * u_ext(URHO)
           endif

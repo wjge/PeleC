@@ -20,7 +20,7 @@ contains
 
     integer untin,i
 
-    namelist /fortin/ mach, beta, radius, xc, yc
+    namelist /fortin/ mach, convecting, beta, radius, xc, yc
 
     ! Build "probin" filename -- the name of file containing fortin namelist.
     integer, parameter :: maxlen = 256
@@ -36,6 +36,7 @@ contains
 
     ! set namelist defaults here
     mach = 0.05
+    convecting = .true.
     beta = 0.02
     radius = 0.5
     xc = 5.0
@@ -79,6 +80,7 @@ contains
        state,state_lo,state_hi, &
        delta,xlo,xhi) bind(C, name = "pc_initdata")
 
+    use parallel
     use probdata_module
     use network, only: nspec, naux, molec_wt
     use eos_type_module
@@ -130,12 +132,14 @@ contains
     const_conductivity = 0.d0
 
     ! Write this out to file (might be useful for postprocessing)
-    open(unit=out_unit,file="ic.txt",action="write",status="replace")
-    write(out_unit,*)"rho0, u0, tau, p0, T0, gamma, c_s0, Mach, beta, radius, xc, yc"
-    write(out_unit,*) eos_state % rho, "," , u0, "," , tau, "," , eos_state % p, "," , &
-         eos_state % T, "," , gamma_const, ",", eos_state % cs, "," , mach, "," , &
-         beta, "," , radius, "," ,  xc, "," , yc
-    close(out_unit)
+    if ( parallel_ioprocessor() ) then
+       open(unit=out_unit,file="ic.txt",action="write",status="replace")
+       write(out_unit,*)"rho0, u0, tau, p0, T0, gamma, c_s0, Mach, beta, radius, xc, yc"
+       write(out_unit,*) eos_state % rho, "," , u0, "," , tau, "," , eos_state % p, "," , &
+            eos_state % T, "," , gamma_const, ",", eos_state % cs, "," , mach, "," , &
+            beta, "," , radius, "," ,  xc, "," , yc
+       close(out_unit)
+    endif
 
     ! Fill in the velocities and energy.
     do j = lo(2), hi(2)
@@ -145,8 +149,12 @@ contains
           x = xlo(1) + delta(1)*(dble(i-lo(1)) + HALF)
 
           r2 = ((x-xc)**2 + (y-yc)**2) / (radius**2)
-          u =  u0 * ( ONE - beta * (y-yc)/radius * exp(-HALF*r2))
+          u =  u0 * ( - beta * (y-yc)/radius * exp(-HALF*r2))
           v =  u0 * beta * (x-xc)/radius * exp(-HALF*r2)
+
+          if (convecting) then
+             u = u + u0
+          endif
 
           ! Call EOS by specifying the temperature and density
           eos_state % T = T0 - (u0*beta)**2 * exp(-HALF*r2) / (TWO * eos_state % cp)

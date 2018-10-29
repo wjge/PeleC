@@ -22,11 +22,11 @@ PeleC::construct_hydro_source(const MultiFab& S, Real time, Real dt, int amr_ite
         std::cout << "... Computing hydro advance" << std::endl;
     }
 
-    BL_ASSERT(S.nGrow() == NUM_GROW);
+    BL_ASSERT(S.nGrow() == NUM_GROW+nGrowF);
 
     sources_for_hydro.setVal(0.0);
 
-    int ng = 0; // TODO: This is currently the largest ngrow of the source data...maybe this needs fixing?
+    int ng = 0 + nGrowF; // TODO: This is currently the largest ngrow of the source data...maybe this needs fixing?
 
     for (int n = 0; n < src_list.size(); ++n)
     {
@@ -91,6 +91,9 @@ PeleC::construct_hydro_source(const MultiFab& S, Real time, Real dt, int amr_ite
     {
 	FArrayBox flux[BL_SPACEDIM];
 
+        FArrayBox filtered_flux[BL_SPACEDIM];
+	FArrayBox filtered_source_out;
+
 	FArrayBox pradial(Box::TheUnitBox(),1);
 	FArrayBox q, qaux, src_q;
 	IArrayBox bcMask;
@@ -103,10 +106,12 @@ PeleC::construct_hydro_source(const MultiFab& S, Real time, Real dt, int amr_ite
 	for (MFIter mfi(S_new,hydro_tile_size); mfi.isValid(); ++mfi)
 	{
 	    const Box& bx    = mfi.tilebox();
-	    const Box& qbx = amrex::grow(bx, NUM_GROW);
+	    const Box& qbx = amrex::grow(bx, NUM_GROW+nGrowF);
 
-	    const int* lo = bx.loVect();
-	    const int* hi = bx.hiVect();
+	    const Box& fbx = amrex::grow(bx, nGrowF);
+
+	    const int* lo = fbx.loVect();
+	    const int* hi = fbx.hiVect();
 
 	    const FArrayBox &statein  = S[mfi];
 	    FArrayBox &stateout = S_new[mfi];
@@ -180,7 +185,7 @@ PeleC::construct_hydro_source(const MultiFab& S, Real time, Real dt, int amr_ite
 
             // Allocate fabs for fluxes
 	    for (int i = 0; i < BL_SPACEDIM ; i++)  {
-		const Box& bxtmp = amrex::surroundingNodes(bx,i);
+		const Box& bxtmp = amrex::surroundingNodes(fbx,i);
 		flux[i].resize(bxtmp,NUM_STATE);
 	    }
 
@@ -222,6 +227,25 @@ PeleC::construct_hydro_source(const MultiFab& S, Real time, Real dt, int amr_ite
 		 eden_lost, xang_lost, yang_lost, zang_lost);
 
 	    courno = std::max(courno,cflLoc);
+
+            // Filter source and fluxes here
+            if (use_explicit_filter)
+            {
+              for (int i = 0; i < BL_SPACEDIM ; i++)  {
+	        const Box& bxtmp = amrex::surroundingNodes(bx,i);
+	        filtered_flux[i].resize(bxtmp,NUM_STATE);
+                les_filter.apply_filter(bxtmp, flux[i], filtered_flux[i], Density, NUM_STATE);
+
+                flux[i].setVal(0);
+                flux[i].copy(filtered_flux[i], Density, Density, NUM_STATE);
+              }
+
+              filtered_source_out.resize(bx, NUM_STATE);
+              les_filter.apply_filter(bx, source_out, filtered_source_out, Density, NUM_STATE);
+
+              source_out.setVal(0);
+              source_out.copy(filtered_source_out, Density, Density, NUM_STATE);
+            }
 
             if (do_reflux  && sub_iteration == sub_ncycle-1 )
             {
