@@ -6,12 +6,12 @@
 Introduction
 ============
 
-Pele solves the reacting compressible Navier-Stokes on a structured grid with, optionally, embedded boundary geometry treatment and non-ideal gas equations of state. A variety of time advance schemes are implemented, notably an operator-split (Strang) approach and an SDC based approach. A variety of examples are included to provide a model setup for the various options. These are discussed futher in the :ref:`Getting Started<GettingStarted>` section.
+Pele solves the reacting compressible Navier-Stokes on a structured grid with, optionally, embedded boundary geometry treatment and non-ideal gas equations of state. A variety of time advance schemes are implemented, notably an operator-split (Strang) approach and an SDC based approach. A variety of examples are included to provide a model setup for the various options. These are discussed further in the :ref:`Getting Started<GettingStarted>` section.
 
 The Pele Project
 ----------------
 
-The origin of PeleC is in the context of *The Pele Project*, with the goal of providing a platform for combustion research in the ExaScale computing era. Specifically, to enable reserach grade simulation (DNS, or near DNS hybrid LES/DNS) of turbulence-chemistry interaction under conditions movitivated by internal combustion engine research as well as establish a path for devlopment of scalable design codes suitable for exascale hardware.
+The origin of PeleC is in the context of *The Pele Project*, with the goal of providing a platform for combustion research in the ExaScale computing era. Specifically, to enable research grade simulation (DNS, or near DNS hybrid LES/DNS) of turbulence-chemistry interaction under conditions motivated by internal combustion engine research as well as establish a path for development of scalable design codes suitable for exascale hardware.
 
 .. csv-table:: Design approach for Pele
    :header: "Characteristic / Need", "Approach"
@@ -24,6 +24,11 @@ The origin of PeleC is in the context of *The Pele Project*, with the goal of pr
       "Liquid fuel injection", "Lagrangian spray model"
       "Coupling between mixture preparation and emissions", "Detailed kinetics including emissions, sectional model for soot with radiation"
       "Mixture preparation dependent on re-entrainment of combustion products", "Realistic piston dish and cylinder wall geometry"
+
+*PeleC* is compressible part of the envisioned capabilities, which will share integrators, a compatible design, data formats, and shared physics with *PeleLM* which is the corresponding low-Mach code. Both codes are built on the AMReX framework.
+
+Two aspects of the PeleC design space are worth noting: first, the original design space is and engine cylinder, which is a closed volume with relatively straightforward (but not rectangular!) shape. Second, PeleC is targeted to be an exascale era code built on AMReX, which suggests an approach to performance that is somewhat forward looking and architecture agile. In practical sense what this implies is that PeleC is not optimized for a particular current architecture but rather provides the flexibility and abstractions to (hopefully) rapidly optimize for a particular target.
+
 
 
 
