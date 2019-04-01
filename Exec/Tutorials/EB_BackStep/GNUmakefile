@@ -12,6 +12,15 @@ USE_OMP    = FALSE
 USE_EB = TRUE
 
 HYP_TYPE = MOL
+
+USE_PARTICLES = TRUE
+
+DEFINES += -DPARTICLES
+
+SPRAY_COMPONENTS = 8
+
+DEFINES += -DSPRAY_COMPONENTS=$(SPRAY_COMPONENTS)
+
 # define the location of the PELE top directory
 PELE_HOME    := ../../..
 
@@ -28,3 +37,4 @@ Bpack   := ./Make.package
 Blocs   := .
 
 include ${PELEC_HOME}/Exec/Make.PeleC
+

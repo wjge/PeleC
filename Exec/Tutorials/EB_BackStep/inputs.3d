@@ -46,7 +46,7 @@ amr.v                = 1       # verbosity in Amr.cpp
 #amr.grid_log         = grdlog  # name of grid logging file
 
 # REFINEMENT / REGRIDDING
-amr.max_level       = 3       # maximum level number allowed
+amr.max_level       = 1      # maximum level number allowed
 amr.ref_ratio       = 2 2 2 2 # refinement ratio
 amr.regrid_int      = 10       # how often to regrid
 amr.blocking_factor = 8       # block factor in grid generation
@@ -72,3 +72,45 @@ eb2.geom_type = box
 eb2.box_lo =  -2.0  -2.0 -2.0
 eb2.box_hi =   2.0   2.0  2.0 
 eb2.box_has_fluid_inside = 0
+
+# PARTICLES / SPRAY
+
+pelec.do_spray_particles = 1
+particles.mass_transfer = 0
+particles.heat_transfer = 0
+particles.mom_transfer = 0
+
+particles.particle_init_file = "sprayfile"
+particles.particle_output_file = "sprayfile"
+particles.particle_init_uniform = 0
+
+particles.pstate_loc = 1
+particles.pstate_u = 3
+particles.pstate_T = 5
+particles.pstate_dia = 6
+particles.pstate_rho = 7
+particles.pstate_ys_fuel = 8
+particles.pstate_nfuel = 1
+
+particles.fld_at_part_u = 1
+particles.fld_at_part_rho = 3
+particles.fld_at_part_T = 4
+particles.fld_at_part_p = 5
+particles.fld_at_part_molwt = 6
+particles.fld_at_part_ys = 7
+
+particles.fuel_species = 1
+particles.fuel_mass_frac = 1.
+
+particles.v = 0
+
+# properties for heptane
+  particles.fuel_density = 0.68141 # g/cm^3
+  particles.fuel_crit_temp = 540. # K
+  particles.fuel_latent = 3.18e9 # erg/g
+  particles.fuel_boil_temp = 371.5 # K
+  particles.fuel_cp = 2.24e7 # erg/g.K = 2.24e3 J/Kg.K
+  particles.fuel_molwt = 100.2019 # g/mol
+  particles.fuel_indx = 1 #Index of the species which constitutes the fuel
+
+
