@@ -97,7 +97,6 @@ PeleC::do_mol_advance(Real time,
   set_body_state(U_new);
 #endif
 
-
   // Compute S^{n} = MOLRhs(U^{n})
   if (verbose) { amrex::Print() << "... Computing MOL source term at t^{n} " << std::endl; }
   FillPatch(*this, Sborder, nGrowTr, time, State_Type, 0, NUM_STATE);
@@ -188,6 +187,71 @@ PeleC::do_mol_advance(Real time,
 
 #ifdef PELE_USE_EB
   set_body_state(U_new);
+#endif
+
+#ifdef AMREX_PARTICLES
+  int ghost_width = 0;
+  int where_width = 0;
+  int spray_n_grow= 0;
+  int tmp_src_width = 0;
+  set_spray_grid_info(amr_iteration, amr_ncycle, ghost_width, where_width, spray_n_grow, tmp_src_width);
+    //
+    // Compute drag terms from particles at old positions, move particles to new positions
+    //  based on old-time velocity field
+    //
+    // TODO: Maybe move this mess into construct_old_source?
+    if (do_spray_particles)
+    {
+      //
+      // Setup the virtual particles that represent finer level particles
+      //
+      setup_virtual_particles();
+
+      //
+      // Setup ghost particles for use in finer levels. Note that ghost particles
+      // that will be used by this level have already been created, the
+      // particles being set here are only used by finer levels.
+      //
+      int finest_level = parent->finestLevel();
+
+      //  
+      // Check if I need to insert new particles
+      //
+      Real cur_time = state[State_Type].curTime();
+      int nstep = parent->levelSteps(0);
+
+//    if (level == finest_level) 
+//      theSprayPC()->injectParticles(cur_time,nstep,level);
+      if (level == finest_level) 
+        theSprayPC()->insertParticles(cur_time,nstep,level,dt);
+
+      particle_redistribute(level,false);
+
+      if (level < finest_level)
+        setup_ghost_particles(ghost_width);
+
+      // Advance the particle velocities to the half-time and the positions to the new time
+      if (particle_verbose)
+        amrex::Print() << "moveKickDrift ... updating particle positions and velocity\n";
+
+      // We will make a temporary copy of the source term array inside moveKickDrift
+      //    and we are only going to use the spray force out to one ghost cell
+      //    so we need only define spray_force_old with one ghost cell
+
+      BL_ASSERT(old_sources[spray_src]->nGrow() >= 1);
+      old_sources[spray_src]->setVal(0.);
+
+      // Do the valid particles themselves
+      theSprayPC()->moveKickDrift(Sborder,*old_sources[spray_src], level, dt, tmp_src_width, where_width);
+
+      // Only need the coarsest virtual particles here.
+      if (level < finest_level)
+      theVirtPC()->moveKickDrift(Sborder,*old_sources[spray_src], level, dt, tmp_src_width, where_width);
+
+      // Miiiight need all Ghosts
+      if (theGhostPC() != 0)
+      theGhostPC()->moveKickDrift(Sborder,*old_sources[spray_src], level, dt, tmp_src_width, where_width);
+    }
 #endif
 
   return dt;

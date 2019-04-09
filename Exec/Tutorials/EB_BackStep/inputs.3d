@@ -80,24 +80,24 @@ particles.mass_transfer = 0
 particles.heat_transfer = 0
 particles.mom_transfer = 0
 
-particles.particle_init_file = "sprayfile"
-particles.particle_output_file = "sprayfile"
+#particles.particle_init_file = "sprayfile"
+#particles.particle_output_file = "sprayfile"
 particles.particle_init_uniform = 0
 
 particles.pstate_loc = 1
-particles.pstate_u = 3
-particles.pstate_T = 5
-particles.pstate_dia = 6
-particles.pstate_rho = 7
-particles.pstate_ys_fuel = 8
+particles.pstate_u = 4
+particles.pstate_T = 7
+particles.pstate_dia = 8
+particles.pstate_rho = 9
+particles.pstate_ys_fuel = 10
 particles.pstate_nfuel = 1
 
 particles.fld_at_part_u = 1
-particles.fld_at_part_rho = 3
-particles.fld_at_part_T = 4
-particles.fld_at_part_p = 5
-particles.fld_at_part_molwt = 6
-particles.fld_at_part_ys = 7
+particles.fld_at_part_rho = 4
+particles.fld_at_part_T = 5
+particles.fld_at_part_p = 6
+particles.fld_at_part_molwt = 7
+particles.fld_at_part_ys = 8
 
 particles.fuel_species = 1
 particles.fuel_mass_frac = 1.

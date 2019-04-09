@@ -272,9 +272,9 @@ PeleC::init_particles ()
         {
             // Initialize uniform particle distribution
             //  {vel(DIM), temperature, diameter, density}
-            ParticleInitType<5, 0, 0, 0> pdata = {{0., 0., 300, 1e-2, 1.}, {}, {}, {}}; //2D
-            //ParticleInitType<6, 0, 0, 0> pdata = {{0., 0., 0., 298, 0.016, 0.68141}, {}, {}, {}}; //3D
-            //theSprayPC()->InitOnePerCell(Real(0.5),Real(0.5),Real(0.5),pdata);
+            //ParticleInitType<5, 0, 0, 0> pdata = {{0., 0., 300, 1e-2, 1.}, {}, {}, {}}; //2D
+            ParticleInitType<6, 0, 0, 0> pdata = {{0., 0., 0., 298, 0.016, 0.68141}, {}, {}, {}}; //3D
+            theSprayPC()->InitOnePerCell(Real(0.5),Real(0.5),Real(0.5),pdata);
           
             if (!particle_output_file.empty())
             {
