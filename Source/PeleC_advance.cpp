@@ -162,8 +162,6 @@ PeleC::do_mol_advance(Real time,
 
   computeTemp(U_new,0);
 
-
-
 #ifdef REACTIONS
   if (do_react == 1)
   {
