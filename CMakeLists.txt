@@ -45,10 +45,11 @@ endif()
 
 ########################### AMReX #####################################
 
-set(AMREX_SUBMOD_LOCATION "${CMAKE_SOURCE_DIR}/Submodules/AMReX")
+#set(AMREX_SUBMOD_LOCATION "${CMAKE_SOURCE_DIR}/Submodules/AMReX")
+set(AMREX_SUBMOD_LOCATION "${AMREX_HOME_DIR}")
 include(${CMAKE_SOURCE_DIR}/CMake/SetAmrexOptions.cmake)
 list(APPEND CMAKE_MODULE_PATH "${AMREX_SUBMOD_LOCATION}/Tools/CMake")
-add_subdirectory(${AMREX_SUBMOD_LOCATION})
+add_subdirectory(${AMREX_SUBMOD_LOCATION} Submodules/amrex)
 include(${CMAKE_SOURCE_DIR}/CMake/SetAmrexCompileFlags.cmake)
 
 ########################### MASA #####################################
