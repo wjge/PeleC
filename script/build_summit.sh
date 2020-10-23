@@ -4,6 +4,8 @@ cmake \
       -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR} \
       -DCMAKE_CXX_COMPILER=mpicxx \
+      -DCMAKE_C_COMPILER=mpicc \
+      -DCMAKE_Fortran_COMPILER=mpifort \
       -DMPIEXEC_PREFLAGS=--oversubscribe \
       -DPELEC_DIM=3 \
       -DPELEC_ENABLE_MPI=ON \
