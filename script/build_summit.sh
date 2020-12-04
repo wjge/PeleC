@@ -6,6 +6,7 @@ cmake \
       -DCMAKE_CXX_COMPILER=mpicxx \
       -DCMAKE_C_COMPILER=mpicc \
       -DCMAKE_Fortran_COMPILER=mpifort \
+      -DPELEC_ENABLE_CUDA=ON \
       -DMPIEXEC_PREFLAGS=--oversubscribe \
       -DPELEC_DIM=3 \
       -DPELEC_ENABLE_MPI=ON \
