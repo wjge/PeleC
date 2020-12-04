@@ -4,7 +4,7 @@ void
 PeleC::getMOLSrcTerm(
   const amrex::MultiFab& S,
   amrex::MultiFab& MOLSrcTerm,
-  amrex::Real time,
+  amrex::Real /*time*/,
   amrex::Real dt,
   amrex::Real flux_factor)
 {
@@ -69,7 +69,7 @@ PeleC::getMOLSrcTerm(
     dx1 *= dx[dir];
   }
   const amrex::GpuArray<amrex::Real, AMREX_SPACEDIM> dxD = {
-    AMREX_D_DECL(dx1, dx1, dx1)};
+    {AMREX_D_DECL(dx1, dx1, dx1)}};
 
   // Fetch some gpu arrays
   prefetchToDevice(S);
@@ -105,15 +105,15 @@ PeleC::getMOLSrcTerm(
   {
     // amrex::IArrayBox bcMask[AMREX_SPACEDIM];
 
-    int flag_nscbc_isAnyPerio = (geom.isAnyPeriodic()) ? 1 : 0;
-    int flag_nscbc_perio[AMREX_SPACEDIM]; // For 3D, we will know which corners
-                                          // have a periodicity
-    for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
-      flag_nscbc_perio[dir] =
-        (amrex::DefaultGeometry().isPeriodic(dir)) ? 1 : 0;
-    }
-    const int* domain_lo = geom.Domain().loVect();
-    const int* domain_hi = geom.Domain().hiVect();
+    // int flag_nscbc_isAnyPerio = (geom.isAnyPeriodic()) ? 1 : 0;
+    // int flag_nscbc_perio[AMREX_SPACEDIM] = {0}; // For 3D, we will know which
+    // corners have a periodicity
+    // for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
+    //   flag_nscbc_perio[dir] =
+    //     (amrex::DefaultGeometry().isPeriodic(dir)) ? 1 : 0;
+    // }
+    // const int* domain_lo = geom.Domain().loVect();
+    // const int* domain_hi = geom.Domain().hiVect();
 
     for (amrex::MFIter mfi(MOLSrcTerm, amrex::TilingIfNotGPU()); mfi.isValid();
          ++mfi) {
@@ -136,6 +136,10 @@ PeleC::getMOLSrcTerm(
         }
         continue;
       }
+      // Note on typ: if interior cells (vbox) are all covered, no need to
+      // do anything. But otherwise, we need to do EB stuff if there are any
+      // cut cells within 1 grow cell (cbox) due to fix_div_and_redistribute
+      typ = flag_fab.getType(cbox);
 
       // TODO: Add check that this is nextra-1
       //       (better: fix bounds on ebflux computation in hyperbolic routine
@@ -150,8 +154,8 @@ PeleC::getMOLSrcTerm(
         (Ncut > 0 ? sv_eb_bndry_geom[local_i].data() : 0);
 #endif
 
-      const int* lo = vbox.loVect();
-      const int* hi = vbox.hiVect();
+      // const int* lo = vbox.loVect();
+      // const int* hi = vbox.hiVect();
 
       BL_PROFILE_VAR_START(diff);
       int nqaux = NQAUX > 0 ? NQAUX : 1;
@@ -234,8 +238,8 @@ PeleC::getMOLSrcTerm(
       amrex::GpuArray<amrex::Array4<amrex::Real>, AMREX_SPACEDIM> flx;
       const amrex::GpuArray<
         const amrex::Array4<const amrex::Real>, AMREX_SPACEDIM>
-        a{AMREX_D_DECL(
-          area[0].array(mfi), area[1].array(mfi), area[2].array(mfi))};
+        a{{AMREX_D_DECL(
+          area[0].array(mfi), area[1].array(mfi), area[2].array(mfi))}};
       for (int dir = 0; dir < AMREX_SPACEDIM; dir++) {
         flux_ec[dir].resize(eboxes[dir], NVAR);
         flux_eli[dir] = flux_ec[dir].elixir();
@@ -372,7 +376,7 @@ PeleC::getMOLSrcTerm(
           amrex::Real* d_eb_flux_thdlocal =
             (nFlux > 0 ? eb_flux_thdlocal.dataPtr() : 0);
 #endif
-          auto const& vol = volume.array(mfi);
+          // auto const& vol = volume.array(mfi);
           pc_compute_hyp_mol_flux(
             cbox, qar, qauxar, flx, a, dx, plm_iorder
 #ifdef PELEC_USE_EB
@@ -471,7 +475,7 @@ PeleC::getMOLSrcTerm(
           BL_PROFILE("PeleC::pc_apply_face_stencil()");
           for (int dir = 0; dir < AMREX_SPACEDIM; ++dir) {
             int Nsten = flux_interp_stencil[dir][local_i].size();
-            int in_place = 1;
+            // int in_place = 1;
             const amrex::Box valid_interped_flux_box =
               amrex::Box(ebfluxbox).surroundingNodes(dir);
             pc_apply_face_stencil(
@@ -501,7 +505,7 @@ PeleC::getMOLSrcTerm(
 
         // Set weighting for redistribution
         auto const& W = vfrac.array(mfi);
-        int wComp = 0;
+        // int wComp = 0;
 
         dm_as_fine.resize(amrex::Box::TheUnitBox(), NVAR);
         dm_as_fine_eli = dm_as_fine.elixir();
@@ -588,13 +592,13 @@ PeleC::getMOLSrcTerm(
 
         if (level < parent->finestLevel()) {
           getFluxReg(level + 1).CrseAdd(
-            mfi, {AMREX_D_DECL(&flux_ec[0], &flux_ec[1], &flux_ec[2])},
+            mfi, {{AMREX_D_DECL(&flux_ec[0], &flux_ec[1], &flux_ec[2])}},
             dxD.data(), dt, device);
         }
 
         if (level > 0) {
           getFluxReg(level).FineAdd(
-            mfi, {AMREX_D_DECL(&flux_ec[0], &flux_ec[1], &flux_ec[2])},
+            mfi, {{AMREX_D_DECL(&flux_ec[0], &flux_ec[1], &flux_ec[2])}},
             dxD.data(), dt, device);
         }
       }
